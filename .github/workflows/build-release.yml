@@ -1,8 +1,7 @@
-# 工作流的名称，会显示在 GitHub 的 Actions 选项卡中
+# 工作流的名称
 name: Build and Release EXE
 
 # 触发工作流的事件
-# 这里设置为：当一个以 'v' 开头的标签 (tag) 被推送到仓库时
 on:
   push:
     tags:
@@ -14,10 +13,13 @@ jobs:
     # 指定运行此任务的虚拟机环境
     runs-on: windows-latest
 
+    # 关键修复1：为任务授予创建Release的权限
+    permissions:
+      contents: write # <--- 新增！这是解决403权限错误的关键
+
     # 任务的步骤
     steps:
       # 第一步：检出 (Checkout) 代码
-      # 这是必需的，它会把你的仓库代码下载到虚拟机中
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -25,33 +27,29 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9' # 你可以指定一个 Python 版本
+          python-version: '3.9'
 
       # 第三步：安装依赖
-      # 安装 requirements.txt 中的库，以及打包工具
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller pyinstaller-version-file
+          pip install pyinstaller
 
-      # 第四步：生成版本文件
-      # 从我们创建的 version.txt 生成 PyInstaller 需要的元数据文件
-      - name: Create version file for executable
-        run: pyi-makespec --version-file version.txt qq_cleaner_gui.py
-
-      # 第五步：使用 PyInstaller 打包
-      # --noconfirm: 覆盖输出时不需确认
-      # --onefile: 打包成单个 .exe 文件
-      # --windowed: GUI 程序必需，运行时不显示黑色控制台窗口
-      # --name: 指定输出的 .exe 文件名
+      # 第四步：使用 PyInstaller 打包
       - name: Build executable with PyInstaller
-        run: pyinstaller --noconfirm --onefile --windowed --name "QQ-Group-Image-Cleaner" qq_cleaner_gui.spec
+        run: >
+          pyinstaller
+          --noconfirm
+          --onefile
+          --windowed
+          --name "QQ-Group-Images-Cleaner"
+          --version-file version.txt
+          qq_group_images_cleaner.py
       
-      # 第六步：创建 Release 并上传打包好的文件
-      # 使用一个社区维护的、非常流行的 action 来做这件事
+      # 第五步：创建 Release 并上传打包好的文件
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
-          # files: 指定要上传的文件路径。PyInstaller 会把 .exe 文件放在 dist 文件夹下
-          files: dist/QQ-Group-Image-Cleaner.exe
+          # files: 指定要上传的文件路径
+          files: dist/QQ-Group-Images-Cleaner.exe
