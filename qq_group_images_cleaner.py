@@ -10,6 +10,12 @@ from collections import defaultdict
 from pathlib import Path
 from tkinter import Tk, filedialog, messagebox, ttk, Frame, Label, Button, Scrollbar, Spinbox, StringVar, Canvas, Menu, Toplevel, W, E, N, S, simpledialog
 
+# --- 关键修复 1: 将 ctypes 相关的导入移至文件顶部 ---
+# 这可以确保 PyInstaller 能够正确地将这些模块打包进去
+if sys.platform == 'win32':
+    import ctypes
+    from ctypes import wintypes
+
 # Pillow is required for image thumbnail generation
 try:
     from PIL import Image, ImageTk
@@ -232,8 +238,8 @@ class QQCleanerApp:
 
         documents_path = self.get_documents_path()
         if not documents_path:
-             messagebox.showwarning(self._('error_find_qq_folder_title'), "Could not determine the Documents folder path.")
-             return
+              messagebox.showwarning(self._('error_find_qq_folder_title'), "Could not determine the Documents folder path.")
+              return
 
         qq_folder_path = Path(documents_path) / 'Tencent Files' / qq_number / 'Image' / 'Group2'
 
@@ -245,8 +251,7 @@ class QQCleanerApp:
     def get_documents_path(self):
         """Get the user's Documents folder path reliably on Windows."""
         if sys.platform == 'win32':
-            import ctypes
-            from ctypes import wintypes
+            # These modules are now imported at the top of the file
             CSIDL_PERSONAL = 5       # My Documents
             SHGFP_TYPE_CURRENT = 0   # Get current, not default value
 
@@ -255,7 +260,7 @@ class QQCleanerApp:
             return buf.value
         else:
             # Fallback for non-Windows systems
-            return Path.home() / 'Documents'
+            return str(Path.home() / 'Documents')
 
     def set_folder_path(self, path):
         """Sets the folder path and updates the UI."""
@@ -287,39 +292,51 @@ class QQCleanerApp:
         self.file_data.clear()
         path_to_scan = self.root_path.get()
         
-        # --- Progress Estimation ---
+        # --- 关键修复 2: 增强错误捕获和报告 ---
+        # 使用更广泛的 except Exception as e 来捕获所有可能的错误
+        # 并使用 print() 将错误信息输出到控制台，以便调试
+        print(f"Starting scan on: {path_to_scan}")
+
         try:
+            # --- Progress Estimation ---
             all_entries = list(os.scandir(path_to_scan))
             total_entries = len(all_entries)
+            print(f"Found {total_entries} top-level entries.")
             self.root.after(0, lambda: self.progress.config(maximum=total_entries if total_entries > 0 else 1))
-        except (FileNotFoundError, PermissionError):
+        except Exception as e:
+            print(f"!!! FATAL ERROR: Could not list directory '{path_to_scan}'.")
+            print(f"!!! REASON: {e}")
+            import traceback
+            traceback.print_exc() # 打印完整的错误堆栈
             self.root.after(0, self.finish_scan)
             return
 
-        # --- Recursive Scan Function ---
+        def process_file(entry):
+            """Processes a single file entry to avoid code duplication."""
+            try:
+                stat = entry.stat()
+                # 使用 st_mtime 作为统一的时间戳来源，因为它最可靠
+                file_time = stat.st_mtime
+                file_size = stat.st_size
+                
+                dt_object = datetime.fromtimestamp(file_time)
+                year, month = dt_object.year, dt_object.month
+                
+                self.file_data[year][month]['size'] += file_size
+                self.file_data[year][month]['paths'].append(entry.path)
+            except Exception as e:
+                # 如果单个文件处理失败，打印警告但继续运行
+                print(f"--- WARNING: Could not process file '{entry.path}'. Reason: {e}")
+                
         def recursive_scan(path):
             try:
                 for entry in os.scandir(path):
-                    try:
-                        if entry.is_dir(follow_symlinks=False):
-                            recursive_scan(entry.path)
-                        elif entry.is_file(follow_symlinks=False):
-                            try: # Add an inner try block for safety
-                                stat = entry.stat()
-                                file_time = min(stat.st_birthtime, stat.st_mtime)
-                                # If file_time is 0 or very small, fromtimestamp might raise an error on some systems
-                                if file_time < 0: continue
-                                dt_object = datetime.fromtimestamp(file_time)
-                                year, month = dt_object.year, dt_object.month
-                                file_size = stat.st_size
-                                self.file_data[year][month]['size'] += file_size
-                                self.file_data[year][month]['paths'].append(entry.path)
-                            except (FileNotFoundError, PermissionError, OSError): # Catch potential errors from stat or fromtimestamp
-                                continue
-                    except (FileNotFoundError, PermissionError):
-                        continue
-            except (FileNotFoundError, PermissionError):
-                return
+                    if entry.is_dir(follow_symlinks=False):
+                        recursive_scan(entry.path)
+                    elif entry.is_file(follow_symlinks=False):
+                        process_file(entry)
+            except Exception as e:
+                print(f"--- WARNING: Could not scan sub-directory '{path}'. Reason: {e}")
 
         # --- Main Scan Loop ---
         try:
@@ -328,19 +345,12 @@ class QQCleanerApp:
                     if entry.is_dir(follow_symlinks=False):
                         recursive_scan(entry.path)
                     elif entry.is_file(follow_symlinks=False):
-                        stat = entry.stat()
-                        file_time = min(stat.st_ctime, stat.st_mtime)
-                        file_size = stat.st_size
-                        dt_object = datetime.fromtimestamp(file_time)
-                        year, month = dt_object.year, dt_object.month
-                        self.file_data[year][month]['size'] += file_size
-                        self.file_data[year][month]['paths'].append(entry.path)
-                except (FileNotFoundError, PermissionError):
-                    continue
+                        process_file(entry)
                 finally:
                     # Update progress after processing each top-level entry
                     self.root.after(0, lambda i=i: self.progress.config(value=i + 1))
         finally:
+            print("Scan loop finished.")
             # Final call to ensure GUI is updated after the loop finishes
             self.root.after(0, self.finish_scan)
     
@@ -351,6 +361,7 @@ class QQCleanerApp:
         self.update_treeview()
         month_count = sum(len(m) for m in self.file_data.values())
         self.status_label.config(text=self._('status_scan_complete', month_count))
+        print(f"Scan complete. Found data for {month_count} months.")
         self.scan_button.config(state='normal')
         if self.file_data:
             self.delete_button.config(state='normal')
@@ -378,10 +389,8 @@ class QQCleanerApp:
         if not item_id: return
         
         item = self.tree.item(item_id)
-        # ttk.Treeview.item() returns a dictionary, and 'tags' is a tuple of strings.
         tags = item.get('tags')
 
-        # Ensure it's a month row (which has tags) and not a year row
         if tags and len(tags) == 2:
             try:
                 year, month = int(tags[0]), int(tags[1])
@@ -389,7 +398,6 @@ class QQCleanerApp:
                 if paths:
                     ThumbnailViewerWindow(self.root, self, paths, year, month)
             except (ValueError, IndexError):
-                # This can happen if tags are not as expected.
                 print(f"Could not parse year/month from tags: {tags}")
 
     def start_delete(self):
@@ -418,9 +426,8 @@ class QQCleanerApp:
             self.status_label.config(text="No files to delete for the selected period.")
             return
 
-        # --- NEW: Show confirmation dialog with thumbnails ---
         dialog = ConfirmationDialog(self.root, self, target_year, target_month, image_paths_to_preview)
-        self.root.wait_window(dialog.top) # Wait until the dialog is closed
+        self.root.wait_window(dialog.top)
 
         if dialog.confirmed:
             self.scan_button.config(state='disabled')
@@ -474,9 +481,9 @@ class ConfirmationDialog:
 
         # Message
         if self.app.lang == 'zh':
-             msg = self.app._('confirm_delete_msg', year, month)
+            msg = self.app._('confirm_delete_msg', year, month)
         else:
-             msg = self.app._('confirm_delete_msg', year=year, month=month)
+            msg = self.app._('confirm_delete_msg', year=year, month=month)
         Label(self.top, text=msg, justify='left', padx=10, pady=10).pack()
 
         # Thumbnails Frame
@@ -662,12 +669,10 @@ class ThumbnailViewerWindow:
         new_width = event.width
         if new_width != self.last_width:
             self.last_width = new_width
-            # Recalculate columns based on new width
-            # Assuming each thumbnail cell needs about 180px
             new_columns = max(1, (self.canvas.winfo_width() - 20) // 180)
             if new_columns != self.columns:
                 self.columns = new_columns
-                self.update_view(force_reload=False) # Redraw with new column count
+                self.update_view(force_reload=False)
 
     def load_image_data(self, image_paths):
         """Load image metadata in a separate thread."""
@@ -728,7 +733,6 @@ class ThumbnailViewerWindow:
             if force_reload:
                 threading.Thread(target=self._load_thumbnails_thread, args=(self.images_on_page,), daemon=True).start()
             else:
-                # If not forcing reload, just repopulate with existing photos
                 self.populate_thumbnails(self.images_on_page)
 
     def _load_thumbnails_thread(self, image_data):
@@ -771,7 +775,6 @@ class ThumbnailViewerWindow:
             label.bind("<Button-3>", lambda e, p=path: self.show_context_menu(e, p))
             ToolTip(label, os.path.basename(path))
 
-        # Configure grid weights for even distribution
         for col_index in range(self.columns):
             self.scrollable_frame.grid_columnconfigure(col_index, weight=1)
 
@@ -799,20 +802,15 @@ class ThumbnailViewerWindow:
         if messagebox.askyesno(self.app._('confirm_delete_title'), f"确认删除文件?\n{os.path.basename(path)}", parent=self.top):
             try:
                 os.remove(path)
-                # Remove from UI
                 self.thumb_labels[path].master.destroy()
                 del self.thumb_labels[path]
-                # Remove from data
                 self.all_images = [img for img in self.all_images if img['path'] != path]
                 self.images_on_page = [img for img in self.images_on_page if img['path'] != path]
                 
-                # Repopulate the current view without a full reload
                 self.populate_thumbnails(self.images_on_page)
                 self.update_page_controls()
 
-                # Also remove from the main app's data
                 self.app.file_data[self.year][self.month]['paths'].remove(path)
-
             except Exception as e:
                 messagebox.showerror(self.app._('error_title'), f"删除失败: {e}", parent=self.top)
 
@@ -820,7 +818,7 @@ class ThumbnailViewerWindow:
         if self.clicked_image_path:
             try:
                 os.startfile(self.clicked_image_path)
-            except AttributeError: # For non-Windows systems
+            except AttributeError:
                 import subprocess
                 opener = "open" if sys.platform == "darwin" else "xdg-open"
                 subprocess.call([opener, self.clicked_image_path])
