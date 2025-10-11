@@ -5,7 +5,7 @@ name: Build and Release EXE
 on:
   push:
     tags:
-      - 'QQ-Group-Images Cleaner-v*' # <--- 已更新！匹配新的标签格式
+      - 'QQ-Group-Images-Cleaner-v*' # <--- 已更新！匹配新的标签格式
 
 # 工作流中运行的任务 (jobs)
 jobs:
