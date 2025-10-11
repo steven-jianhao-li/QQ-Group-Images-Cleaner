@@ -31,12 +31,12 @@ VSVersionInfo(
         u'000004b0',
         [StringStruct(u'CompanyName', u'steven-jianhao-li'),
         StringStruct(u'FileDescription', u'QQ Group Images Cleaner'),
-        StringStruct(u'FileVersion', u'1.0.0.0'),
+        StringStruct(u'FileVersion', u'1.1'),
         StringStruct(u'InternalName', u'QQCleaner'),
         StringStruct(u'LegalCopyright', u'© steven-jianhao-li. All rights reserved.'),
         StringStruct(u'OriginalFilename', u'QQ-Group-Images-Cleaner.exe'),
         StringStruct(u'ProductName', u'QQ Group Images Cleaner'),
-        StringStruct(u'ProductVersion', u'1.0.0.0')])
+        StringStruct(u'ProductVersion', u'1.1')])
       ]), 
     VarFileInfo([VarStruct(u'Translation', [0, 1200])])
   ]
