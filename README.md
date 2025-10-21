@@ -1,4 +1,24 @@
-# QQ群聊图像清理器
+# QQ群聊图像清理器：帮你找回被“偷走”的数十GB硬盘空间！
+
+<div align="center">
+
+<!-- Badges -->
+<p>
+    <a href="https://github.com/steven-jianhao-li/QQ-Group-Images-Cleaner/releases/latest">
+      <img src="https://img.shields.io/github/v/release/steven-jianhao-li/QQ-Group-Images-Cleaner?style=for-the-badge&logo=github" alt="Latest Release">
+    </a>
+    <a href="https://github.com/steven-jianhao-li/QQ-Group-Images-Cleaner/releases">
+      <img src="https://img.shields.io/github/downloads/steven-jianhao-li/QQ-Group-Images-Cleaner/total?style=for-the-badge&logo=github" alt="Downloads">
+    </a>
+    <a href="https://opensource.org/licenses/MIT">
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=opensourceinitiative" alt="License: MIT">
+    </a>
+    <a href="https://www.python.org/">
+      <img src="https://img.shields.io/badge/Python-3.7+-blue.svg?style=for-the-badge&logo=python" alt="Python 3.7+">
+    </a>
+</p>
+</div>
+
 一款拥有图形界面的**腾讯QQ桌面端**群聊图片的清理工具，用于彻底扫描和清理来自QQ群聊的海量被动存储的缓存图片（存放于路径`Documents\Tencent Files\<QQ号>\Image\Group2`），帮助您回收数GB的磁盘空间。
 
 
