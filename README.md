@@ -4,18 +4,10 @@
 
 <!-- Badges -->
 <p>
-    <a href="https://github.com/steven-jianhao-li/QQ-Group-Images-Cleaner/releases/latest">
-      <img src="https://img.shields.io/github/v/release/steven-jianhao-li/QQ-Group-Images-Cleaner?style=for-the-badge&logo=github" alt="Latest Release">
-    </a>
-    <a href="https://github.com/steven-jianhao-li/QQ-Group-Images-Cleaner/releases">
-      <img src="https://img.shields.io/github/downloads/steven-jianhao-li/QQ-Group-Images-Cleaner/total?style=for-the-badge&logo=github" alt="Downloads">
-    </a>
-    <a href="https://opensource.org/licenses/MIT">
-      <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=opensourceinitiative" alt="License: MIT">
-    </a>
-    <a href="https://www.python.org/">
-      <img src="https://img.shields.io/badge/Python-3.7+-blue.svg?style=for-the-badge&logo=python" alt="Python 3.7+">
-    </a>
+    <a href="https://github.com/steven-jianhao-li/QQ-Group-Images-Cleaner/releases/latest"><img src="https://img.shields.io/github/v/release/steven-jianhao-li/QQ-Group-Images-Cleaner" alt="Latest Release"></a>
+    <a href="https://github.com/steven-jianhao-li/QQ-Group-Images-Cleaner/releases"><img src="https://img.shields.io/github/downloads/steven-jianhao-li/QQ-Group-Images-Cleaner/total.svg" alt="Downloads"></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.7+-blue.svg" alt="Python 3.7+"></a>
 </p>
 </div>
 
