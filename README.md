@@ -126,6 +126,32 @@ Python 3.7+
 
 Pillow
 
+## 🛠️ 代码结构
+```
+QQ-Group-Images-Cleaner/
+├── assets/                     # 存放图片、图标等静态资源
+├── lib/                        # 核心逻辑模块
+│   ├── QQCleanerApp.py         # 主应用类，负责GUI构建、核心业务逻辑
+│   ├── ConfirmationDialog.py   # 删除操作前的确认对话框，带图片预览
+│   ├── ThumbnailViewerWindow.py# 缩略图浏览器窗口
+│   ├── i18n.py                 # 国际化字符串，支持中英双语
+│   ├── ToolTip.py              # 自定义实现的悬浮提示工具
+│   ├── ImportCheck.py          # 依赖项检查模块
+│   └── __init__.py             # 将lib目录标记为Python包
+├── qq_group_images_cleaner.py  # 程序主入口
+├── requirements.txt            # Python依赖项列表
+├── README.md                   # 项目说明文件
+└── LICENSE                     # 许可证文件
+```
+
+### `lib` 模块说明
+- **`QQCleanerApp.py`**: 应用程序的核心。包含了主窗口的创建、UI布局、文件扫描线程、删除线程以及与用户交互的所有主要逻辑。
+- **`ConfirmationDialog.py`**: 在执行删除操作前弹出的确认窗口。它会随机展示待删除图片的一部分缩略图，以防止用户误删。
+- **`ThumbnailViewerWindow.py`**: 当用户在主界面双击某个月份时，会弹出此窗口，用于分页、排序和预览该月份下的所有图片。支持右键菜单进行单个文件的操作。
+- **`i18n.py`**: 国际化(Internationalization)模块。存储了程序中所有UI文本的中文和英文版本，方便进行语言切换。
+- **`ToolTip.py`**: 一个简单的辅助类，用于在鼠标悬停在UI控件上时显示提示信息（例如，在缩略图上显示完整文件名）。
+- **`ImportCheck.py`**: 依赖检查模块。程序启动时会检查关键的`Pillow`库是否存在，如果不存在则会弹出提示并退出，引导用户安装。
+
 ## 🤝 贡献
 欢迎提交问题 (Issues) 和拉取请求 (Pull Requests)。
 
@@ -138,6 +164,14 @@ Pillow
 4. 推送到分支 (git push origin feature/AmazingFeature)
 
 5. 打开一个 Pull Request
+
+### 贡献者
+
+感谢以下贡献者对本项目的支持与帮助：
+
+<a href="https://contrib.rocks/image?repo=steven-jianhao-li/QQ-Group-Images-Cleaner">
+  <img src="https://contrib.rocks/image?repo=steven-jianhao-li/QQ-Group-Images-Cleaner" />
+</a>
 
 ## ⭐ Star History
 
